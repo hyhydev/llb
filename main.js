@@ -1871,6 +1871,13 @@ function addGeneralAngles(char) {
   }
   var buntAngles = getBuntAngles(validBuntPoses);
   buntAngles.forEach(function(e) { char.angles.push(e); });
+  if (char.name == "Doombox") {
+    var buntAngles = getBuntAngles(["swing", "smash", "spike"]);
+    buntAngles.forEach(function(e) {
+      e.onlyWhenReticleIsActive = true;
+      char.angles.push(e);
+    });
+  }
 }
 
 function getBuntAngles(validBuntPoses) {
@@ -3883,7 +3890,9 @@ function draw() {
 
     for (var j = 0; j < char.angles.length; j++) {
       var currentAngle = char.angles[j];
-      if ((charImagesOn && currentAngle.validWhen.indexOf(char.pose.name) < 0) || (currentAngle.hidden && !charImagesOn)) {
+      if ((charImagesOn && currentAngle.validWhen.indexOf(char.pose.name) < 0)
+        || (currentAngle.onlyWhenReticleIsActive && !char.reticle)
+        || (currentAngle.hidden && !charImagesOn)) {
         continue;
       }
       var startingPoint = new Point(char.x, char.y);
