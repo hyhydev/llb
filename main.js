@@ -3815,7 +3815,9 @@ function draw() {
           currentAngle.reflections = 0;
 
           var startingPoint = new Point(char.x, char.y);
+          currentAngle.preview = true;
           drawAngle(char, currentAngle, startingPoint, false);
+          currentAngle.preview = false;
 
           sprayForPreview.x = currentAngle.lastBallLocation.x;
           sprayForPreview.y = currentAngle.lastBallLocation.y;
