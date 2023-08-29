@@ -1807,6 +1807,7 @@ var charImages = [], charImagesOn = true
 var showBallImpactLocations = true
 var ignoreHitboxCollisions = false
 var showCoverage = false
+var hideAllButtons = false
 var tooltipOffset = new Point(-10, -17);
 var tooltipLocation = new Point();
 var tooltipText = '';
@@ -3573,107 +3574,109 @@ function draw() {
           myMoveHandler(event);
         }
       }
-      var groundOffset = 0;
-      if (char.pose.groundOffset) {
-        groundOffset = char.pose.groundOffset;
-      }
-      var hurtbox = char.getRelativeHurtbox();
-      var iconSize = new Size(20, 20);
-      var iconsX = char.x + char.imgOffset.x + hurtbox.bottomCenter.x - 50 + iconSize.width / 2;
-      var iconsY = char.y + char.imgOffset.y + hurtbox.bottomCenter.y - char.baseHeight - iconSize.height / 2 + groundOffset;
-      iconsX = Math.max(iconSize.width / 2, iconsX);
-      iconsY = Math.max(iconSize.height / 2, iconsY);
-      var icon = createButtonWithTooltip("flip", "Flip", tooltip);
-      var iconPosition = 0;
-      var iconSpacing = 22;
-      icon.position.x = iconsX + iconPosition;
-      icon.position.y = iconsY;
-      iconPosition += iconSpacing;
-      icon.char = char;
-      icon.onMouseDown = function(event) {
-        flipDirectionFacing(this.char);
-        draw();
-      }
-      var icon = createButtonWithTooltip("toggle", "Toggle Buttons", tooltip);
-      icon.position.x = iconsX + iconPosition;
-      icon.position.y = iconsY;
-      iconPosition += iconSpacing;
-      icon.char = char;
-      icon.onMouseDown = function(event) {
-        toggleDirectButtons(this.char);
-        draw();
-      }
-      var icon = createButtonWithTooltip("pose", "Change Pose", tooltip);
-      icon.position.x = iconsX + iconPosition;
-      icon.position.y = iconsY;
-      iconPosition += iconSpacing;
-      icon.char = char;
-      icon.onMouseDown = function(event) {
-        nextPose(this.char);
-        draw();
-      }
-      if (char.pose.canParry) {
-        var icon = createButtonWithTooltip("parry", "Parry", tooltip);
+      if (!hideAllButtons) {
+        var groundOffset = 0;
+        if (char.pose.groundOffset) {
+          groundOffset = char.pose.groundOffset;
+        }
+        var hurtbox = char.getRelativeHurtbox();
+        var iconSize = new Size(20, 20);
+        var iconsX = char.x + char.imgOffset.x + hurtbox.bottomCenter.x - 50 + iconSize.width / 2;
+        var iconsY = char.y + char.imgOffset.y + hurtbox.bottomCenter.y - char.baseHeight - iconSize.height / 2 + groundOffset;
+        iconsX = Math.max(iconSize.width / 2, iconsX);
+        iconsY = Math.max(iconSize.height / 2, iconsY);
+        var icon = createButtonWithTooltip("flip", "Flip", tooltip);
+        var iconPosition = 0;
+        var iconSpacing = 22;
         icon.position.x = iconsX + iconPosition;
         icon.position.y = iconsY;
         iconPosition += iconSpacing;
         icon.char = char;
         icon.onMouseDown = function(event) {
-          this.char.parry = !this.char.parry;
+          flipDirectionFacing(this.char);
           draw();
         }
-      }
-      if (char.pose.canMirror) {
-        var buttonText = "Mirror Special Angles";
-        if (char.pose.name == "grab") {
-          buttonText = "Mirror Throw Angles";
-        }
-        var icon = createButtonWithTooltip("mirror", buttonText, tooltip);
+        var icon = createButtonWithTooltip("toggle", "Toggle Buttons", tooltip);
         icon.position.x = iconsX + iconPosition;
         icon.position.y = iconsY;
         iconPosition += iconSpacing;
         icon.char = char;
         icon.onMouseDown = function(event) {
-          toggleMirrorAngles(this.char);
+          toggleDirectButtons(this.char);
           draw();
         }
-      }
-      if (char.name == "Doombox" && char.pose.canSpecial) {
-        var icon = createButtonWithTooltip("snipe_special", "Toggle Special", tooltip);
+        var icon = createButtonWithTooltip("pose", "Change Pose", tooltip);
         icon.position.x = iconsX + iconPosition;
         icon.position.y = iconsY;
         iconPosition += iconSpacing;
         icon.char = char;
         icon.onMouseDown = function(event) {
-          toggleDoomboxAimReticle(this.char);
+          nextPose(this.char);
           draw();
         }
-      }
-      if (char.name == "Toxic") {
-        var icon = createButtonWithTooltip("spray_special", "Spray", tooltip);
-        icon.position.x = iconsX + iconPosition;
+        if (char.pose.canParry) {
+          var icon = createButtonWithTooltip("parry", "Parry", tooltip);
+          icon.position.x = iconsX + iconPosition;
+          icon.position.y = iconsY;
+          iconPosition += iconSpacing;
+          icon.char = char;
+          icon.onMouseDown = function(event) {
+            this.char.parry = !this.char.parry;
+            draw();
+          }
+        }
+        if (char.pose.canMirror) {
+          var buttonText = "Mirror Special Angles";
+          if (char.pose.name == "grab") {
+            buttonText = "Mirror Throw Angles";
+          }
+          var icon = createButtonWithTooltip("mirror", buttonText, tooltip);
+          icon.position.x = iconsX + iconPosition;
+          icon.position.y = iconsY;
+          iconPosition += iconSpacing;
+          icon.char = char;
+          icon.onMouseDown = function(event) {
+            toggleMirrorAngles(this.char);
+            draw();
+          }
+        }
+        if (char.name == "Doombox" && char.pose.canSpecial) {
+          var icon = createButtonWithTooltip("snipe_special", "Toggle Special", tooltip);
+          icon.position.x = iconsX + iconPosition;
+          icon.position.y = iconsY;
+          iconPosition += iconSpacing;
+          icon.char = char;
+          icon.onMouseDown = function(event) {
+            toggleDoomboxAimReticle(this.char);
+            draw();
+          }
+        }
+        if (char.name == "Toxic") {
+          var icon = createButtonWithTooltip("spray_special", "Spray", tooltip);
+          icon.position.x = iconsX + iconPosition;
+          icon.position.y = iconsY;
+          iconPosition += iconSpacing;
+          icon.char = char;
+          icon.onMouseDown = function(event) {
+            toggleToxicSpray(this.char);
+            draw();
+          }
+        }
+        var icon = createButtonWithTooltip("reset", "Double Click to Reset Character", tooltip);
+        icon.position.x = iconsX + iconPosition + 10;
         icon.position.y = iconsY;
-        iconPosition += iconSpacing;
         icon.char = char;
+        icon.confirmed = char.resetConfirmed;
+        char.resetConfirmed = false;
         icon.onMouseDown = function(event) {
-          toggleToxicSpray(this.char);
+          if (this.confirmed) {
+            resetCharacter(this.char);
+            this.char.resetConfirmed = false;
+          } else {
+            this.char.resetConfirmed = true;
+          }
           draw();
         }
-      }
-      var icon = createButtonWithTooltip("reset", "Double Click to Reset Character", tooltip);
-      icon.position.x = iconsX + iconPosition + 10;
-      icon.position.y = iconsY;
-      icon.char = char;
-      icon.confirmed = char.resetConfirmed;
-      char.resetConfirmed = false;
-      icon.onMouseDown = function(event) {
-        if (this.confirmed) {
-          resetCharacter(this.char);
-          this.char.resetConfirmed = false;
-        } else {
-          this.char.resetConfirmed = true;
-        }
-        draw();
       }
     } else {
       var charCircle = new Path.Circle({
@@ -3978,6 +3981,9 @@ function createButtonWithTooltip(iconName, tooltipText, tooltip) {
     hideTooltip(tooltip);
   }
   listOfCreatedButtons.push(icon);
+  if (hideAllButtons) {
+    icon.visible = false
+  }
   return icon;
 }
 
@@ -3987,6 +3993,9 @@ function addAngleButtons(char, angle, position, facing, updateCharPoseOnButtonUs
     offset = angle.customOffset;
   }
   if (angle.onlyCuff && charImagesOn) {
+    return;
+  }
+  if (hideAllButtons) {
     return;
   }
   if (angle.pong || angle.bunt) {
@@ -4761,6 +4770,12 @@ $('#collision').on('click', function(e) {
 $('#coverage').on('click', function(e) {
   e.preventDefault
   showCoverage = !showCoverage
+  draw()
+})
+
+$('#buttons').on('click', function(e) {
+  e.preventDefault
+  hideAllButtons = !hideAllButtons
   draw()
 })
 
