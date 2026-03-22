@@ -670,7 +670,7 @@ var characterJSON = {
       },
       {
         "name": "spike-forward",
-        "degrees": 83,
+        "degrees": 77,
         "validWhen": ["spike"],
       },
       {
