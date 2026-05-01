@@ -122,4 +122,5 @@ export interface Character {
 export interface Stage {
   canvasSize: [number, number];
   canvasOffset: [number, number];
+  imageSize: [number, number];
 }
