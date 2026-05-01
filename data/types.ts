@@ -61,6 +61,11 @@ export interface Angle {
   /** Sonata/DustAndAshes special */
   maxDistance?: number;
   validForStep?: number[];
+  /** Bunt gravity arc */
+  bunt?: boolean;
+  gravity?: number;
+  maxGravity?: number;
+  buntStep?: number;
   /** Dice pong spin */
   pong?: boolean;
   initialSpeed?: number;
