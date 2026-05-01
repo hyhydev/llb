@@ -18,9 +18,7 @@ interface Props {
 export function Stage({ stageName, characterName, pose = "swing", action }: Props) {
   const stage = stageJSON[stageName];
   const character = characterJSON[characterName];
-  const [stageW, stageH] = stage.canvasSize;
   const [imgW, imgH] = stage.imageSize;
-  const [offsetX, offsetY] = stage.canvasOffset;
 
   const poseData = character.poses.find((p) => p.name === pose) ?? character.poses[0];
   const [charW, charH] = poseData.imgSize;
@@ -40,8 +38,8 @@ export function Stage({ stageName, characterName, pose = "swing", action }: Prop
   function toSVGPoint(e: React.PointerEvent): { x: number; y: number } {
     const rect = svgRef.current!.getBoundingClientRect();
     return {
-      x: (e.clientX - rect.left) * (stageW / rect.width),
-      y: (e.clientY - rect.top) * (stageH / rect.height),
+      x: (e.clientX - rect.left) * (imgW / rect.width),
+      y: (e.clientY - rect.top) * (imgH / rect.height),
     };
   }
 
@@ -77,17 +75,17 @@ export function Stage({ stageName, characterName, pose = "swing", action }: Prop
   return (
     <svg
       ref={svgRef}
-      viewBox={`0 0 ${stageW} ${stageH}`}
-      width={stageW}
-      height={stageH}
+      viewBox={`0 0 ${imgW} ${imgH}`}
+      width={imgW}
+      height={imgH}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       style={{ touchAction: "none", maxWidth: "100%", height: "auto" }}
     >
       <image
         href={`/stages/${stageName}.jpg`}
-        x={-offsetX}
-        y={-offsetY}
+        x={0}
+        y={0}
         width={imgW}
         height={imgH}
         preserveAspectRatio="none"

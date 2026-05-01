@@ -21,7 +21,7 @@ export function stageBoundsFrom(stage: {
 }): Bounds {
   const [w, h] = stage.canvasSize;
   const [ox, oy] = stage.canvasOffset;
-  return { left: ox, top: oy, right: w - ox, bottom: h - oy };
+  return { left: ox, top: oy, right: ox + w, bottom: oy + h };
 }
 
 /**
