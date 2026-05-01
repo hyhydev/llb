@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  EXPERT
+  OWNER
+}
+
+model User {
+  id        String   @id @default(cuid())
+  discordId String   @unique
+  username  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+
+  expertSubmissions ExpertSubmission[]
+  userAttempts      UserAttempt[]
+}
+
+model Puzzle {
+  id                String    @id @default(cuid())
+  date              DateTime  @unique @db.Date
+  stage             String
+  attackerCharacter String
+  attackerX         Float
+  attackerY         Float
+  action            String
+  defenderCharacter String
+  meterState        Int
+  ballSpeed         Int
+  consensusX        Float?
+  consensusY        Float?
+  generatedAt       DateTime  @default(now())
+
+  expertSubmissions ExpertSubmission[]
+  userAttempts      UserAttempt[]
+}
+
+model ExpertSubmission {
+  id          String   @id @default(cuid())
+  puzzleId    String
+  userId      String
+  x           Float
+  y           Float
+  pose        String
+  submittedAt DateTime @default(now())
+
+  puzzle Puzzle @relation(fields: [puzzleId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model UserAttempt {
+  id          String   @id @default(cuid())
+  puzzleId    String
+  userId      String
+  x           Float
+  y           Float
+  pose        String
+  distance    Float
+  tier        Int
+  submittedAt DateTime @default(now())
+
+  puzzle Puzzle @relation(fields: [puzzleId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([puzzleId, userId])
+}
