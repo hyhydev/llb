@@ -31,6 +31,18 @@ describe("clampToStage", () => {
     // max y = bounds.bottom - halfH = 543 - 75 = 468
     expect(clampToStage({ x: 500, y: 700 }, bounds, char)).toEqual({ x: 500, y: 468 });
   });
+
+  it("aligns feet to bottom when groundAnchorY is provided", () => {
+    // char height=150, feet at sprite-y=140 (10px bottom padding)
+    // feetFromCenter = 140 - 75 = 65, max y = 543 - 65 = 478
+    expect(clampToStage({ x: 500, y: 700 }, bounds, char, 140)).toEqual({ x: 500, y: 478 });
+  });
+
+  it("groundAnchorY at sprite bottom matches default behaviour", () => {
+    expect(clampToStage({ x: 500, y: 700 }, bounds, char, 150)).toEqual(
+      clampToStage({ x: 500, y: 700 }, bounds, char),
+    );
+  });
 });
 
 describe("stageBoundsFrom", () => {

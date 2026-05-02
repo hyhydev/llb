@@ -45,9 +45,11 @@ export function Stage({ stageName, stagedCharacters, onMoveCharacter }: Props) {
     const character = characterJSON[sc.characterName];
     const poseData = character.poses.find((p) => p.name === sc.pose) ?? character.poses[0];
     const [charW, charH] = poseData.imgSize;
+    const firstHurtbox = poseData.hurtboxes[0];
+    const groundAnchorY = firstHurtbox ? firstHurtbox[1] + firstHurtbox[3] : charH;
     const pt = toSVGPoint(e);
     const raw = { x: pt.x - dragging.current.offsetX, y: pt.y - dragging.current.offsetY };
-    onMoveCharacter(sc.id, clampToStage(raw, bounds, { width: charW, height: charH }));
+    onMoveCharacter(sc.id, clampToStage(raw, bounds, { width: charW, height: charH }, groundAnchorY));
   }
 
   function onPointerUp() {
