@@ -58,11 +58,9 @@ export function Stage({ stageName, stagedCharacters, onMoveCharacter }: Props) {
     <svg
       ref={svgRef}
       viewBox={`0 0 ${imgW} ${imgH}`}
-      width={imgW}
-      height={imgH}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
-      style={{ touchAction: "none", maxWidth: "100%", height: "auto" }}
+      style={{ touchAction: "none", width: "100%", height: "auto", display: "block" }}
     >
       <image
         href={`/stages/${stageName}.jpg`}

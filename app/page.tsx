@@ -57,7 +57,7 @@ export default function Home() {
         onPoseChange={handlePoseChange}
         onToggleFacing={handleToggleFacing}
       />
-      <main className="flex-1 flex items-center justify-center overflow-auto p-4">
+      <main className="flex-1 min-w-0 flex items-center justify-center overflow-auto p-4">
         <Stage
           stageName={stageName}
           stagedCharacters={stagedCharacters}
