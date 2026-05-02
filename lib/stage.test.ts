@@ -6,7 +6,7 @@ import { clampToStage, stageBoundsFrom } from "./stage";
 const bounds = { left: 43, top: 33, right: 1283, bottom: 543 };
 const char = { width: 100, height: 150 };
 
-describe("clampToStage", () => {
+describe("clampToStage without hurtbox (sprite bounds)", () => {
   it("returns position unchanged when inside bounds", () => {
     const pos = { x: 500, y: 200 };
     expect(clampToStage(pos, bounds, char)).toEqual(pos);
@@ -31,16 +31,39 @@ describe("clampToStage", () => {
     // max y = bounds.bottom - halfH = 543 - 75 = 468
     expect(clampToStage({ x: 500, y: 700 }, bounds, char)).toEqual({ x: 500, y: 468 });
   });
+});
 
-  it("aligns feet to bottom when groundAnchorY is provided", () => {
-    // char height=150, feet at sprite-y=140 (10px bottom padding)
-    // feetFromCenter = 140 - 75 = 65, max y = 543 - 65 = 478
-    expect(clampToStage({ x: 500, y: 700 }, bounds, char, 140)).toEqual({ x: 500, y: 478 });
+describe("clampToStage with hurtbox", () => {
+  // sprite 100×150, hurtbox at [20, 15, 40, 120]
+  // hurtL=20, hurtR=60, hurtBottom=135, halfW=50, halfH=75
+  const hurtbox = [20, 15, 40, 120] as const;
+
+  it("allows sprite to extend left of stage when hurtbox fits", () => {
+    // min x = bounds.left + halfW - hurtL = 43 + 50 - 20 = 73
+    // (20px further left than sprite-only clamping)
+    expect(clampToStage({ x: 0, y: 200 }, bounds, char, hurtbox)).toEqual({ x: 73, y: 200 });
   });
 
-  it("groundAnchorY at sprite bottom matches default behaviour", () => {
-    expect(clampToStage({ x: 500, y: 700 }, bounds, char, 150)).toEqual(
-      clampToStage({ x: 500, y: 700 }, bounds, char),
+  it("allows sprite to extend right of stage when hurtbox fits", () => {
+    // max x = bounds.right + halfW - hurtR = 1283 + 50 - 60 = 1273
+    // (40px further right than sprite-only clamping)
+    expect(clampToStage({ x: 1400, y: 200 }, bounds, char, hurtbox)).toEqual({ x: 1273, y: 200 });
+  });
+
+  it("aligns hurtbox bottom to stage floor", () => {
+    // hurtBottom=135, feetFromCenter=135-75=60, max y = 543 - 60 = 483
+    expect(clampToStage({ x: 500, y: 700 }, bounds, char, hurtbox)).toEqual({ x: 500, y: 483 });
+  });
+
+  it("position inside bounds unchanged", () => {
+    const pos = { x: 500, y: 200 };
+    expect(clampToStage(pos, bounds, char, hurtbox)).toEqual(pos);
+  });
+
+  it("hurtbox spanning full sprite width matches no-hurtbox behaviour", () => {
+    const fullHurtbox = [0, 0, 100, 150] as const;
+    expect(clampToStage({ x: 0, y: 700 }, bounds, char, fullHurtbox)).toEqual(
+      clampToStage({ x: 0, y: 700 }, bounds, char),
     );
   });
 });
