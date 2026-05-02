@@ -41,16 +41,24 @@ A selectable fighter placed on the stage. Each character has a set of angles, po
 _Avoid_: player, fighter, hero
 
 **Pose**:
-A character's combat stance (e.g. swing, crouch, lay). The active pose determines which hitboxes and hurtboxes are visible and which angles are valid.
+A character's combat stance (e.g. swing, crouch, lay). Each pose has its own sprite, hurtboxes, hitboxes, and image dimensions. The active pose determines which angles are valid (via `validWhen`) and which hitbox/hurtbox geometry is shown. Grounded poses (e.g. halfcrouch, lay) are flagged with `grounded: true`; aerial poses (e.g. spike) are not. Characters typically have 5–8 poses.
 _Avoid_: animation, state, stance
 
 **Hitbox**:
-A rectangular collision region on a character that can deflect the ball.
+A rectangular collision region on a character that can deflect the ball. Rendered in red in the tool. A pose may have zero or more hitboxes — swing has one (the bat arc), smash has two, non-attacking poses typically have none. Hitboxes are pose-specific and stored in sprite-local coordinates `[x, y, width, height]`. Hitboxes are allowed to extend outside stage boundaries; only the hurtbox is constrained to the stage.
 _Avoid_: collision box
 
 **Hurtbox**:
-A rectangular region on a character representing where the character itself can be hit.
+A rectangular region defining the physical extent of the character — where they can be hit and how much space they occupy on the stage. Rendered in blue in the tool. Each pose has at least one hurtbox, stored in sprite-local coordinates `[x, y, width, height]`. The hurtbox is the authoritative boundary for stage clamping: when a character is dragged, only the hurtbox is required to stay within the playable bounds — the sprite and any hitbox overhang are free to extend into walls. The bottom edge of the first hurtbox (`hurtbox[1] + hurtbox[3]`) is the character's ground contact point (feet), used to align the character to the stage floor. The hurtbox is typically narrower and shorter than the full sprite due to transparent padding in the sprite image.
 _Avoid_: damage box
+
+**Sprite**:
+The PNG image for a character in a given pose. Larger than the character model — there is transparent padding around the character, so the sprite dimensions do not correspond to the character's physical extent. Positions and sizes in `hurtboxes` and `hitboxes` are expressed in sprite-local coordinates, where `(0, 0)` is the sprite's top-left corner. The character is rendered centred on their stage position, so the sprite's top-left is at `pos - spriteSize / 2`. All sprites are right-facing (`_r.png`); left-facing is achieved by a horizontal SVG mirror transform around the character centre.
+_Avoid_: image, texture, frame
+
+**Facing**:
+The horizontal direction a character is oriented — right (default) or left (mirrored). Mirroring is a visual-only SVG transform; it does not change hitbox or hurtbox coordinates or affect ball path calculations.
+_Avoid_: direction, orientation, side
 
 **Simulation**:
 The pure TypeScript function that computes a ball path from an angle's degrees, start position, and stage bounds — producing a series of line segments and reflection points. Has no rendering dependency; used by both the visualisation tool and puzzle generation.
