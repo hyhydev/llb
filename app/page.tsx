@@ -1,4 +1,10 @@
-import { Stage } from "@/components/Stage";
+"use client";
+
+import dynamic from "next/dynamic";
+
+const Stage = dynamic(() => import("@/components/Stage").then((m) => ({ default: m.Stage })), {
+  ssr: false,
+});
 
 export default function Home() {
   return (
