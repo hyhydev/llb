@@ -139,17 +139,20 @@ export function Stage({ stageName, stagedCharacters, onMoveCharacter, onMoveBall
         let ballPathEntries: BallPathEntry[] = [];
         let ballStagePos: { x: number; y: number } | null = null;
         if (sc.role === "attacker" && sc.ballPosition) {
-          ballStagePos = {
-            x: sc.position.x - charW / 2 + sc.ballPosition.x,
-            y: sc.position.y - charH / 2 + sc.ballPosition.y,
-          };
+          const mirrored = sc.facing === "left";
+          ballStagePos = mirrored
+            ? { x: sc.position.x + charW / 2 - sc.ballPosition.x, y: sc.position.y - charH / 2 + sc.ballPosition.y }
+            : { x: sc.position.x - charW / 2 + sc.ballPosition.x, y: sc.position.y - charH / 2 + sc.ballPosition.y };
           const validAngles = getValidAnglesForPose(character, sc.pose);
-          ballPathEntries = validAngles.map((a) => ({
-            path: computeBallPath(a, ballStagePos!, bounds, { reflections: 5 }, hasDefender ? defenderBoxes : undefined),
-            angleName: a.name,
-            color: character.color,
-            strokeColor: character.strokeColor,
-          }));
+          ballPathEntries = validAngles.map((a) => {
+            const effectiveAngle = mirrored ? { ...a, degrees: 180 - a.degrees } : a;
+            return {
+              path: computeBallPath(effectiveAngle, ballStagePos!, bounds, { reflections: 5 }, hasDefender ? defenderBoxes : undefined),
+              angleName: a.name,
+              color: character.color,
+              strokeColor: character.strokeColor,
+            };
+          });
         }
 
         return (
