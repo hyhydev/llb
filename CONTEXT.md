@@ -154,6 +154,18 @@ _Avoid_: admin, moderator
 A player authenticated via Discord OAuth who can submit a daily puzzle answer and appear on the leaderboard. Authentication is handled by BetterAuth.
 _Avoid_: player, member, account
 
+**Active angle**:
+A user-selected angle with a configured reflection count, shown in the tool. When an attacker is placed on stage, no active angles exist by default — the user adds them individually from the angles valid for the current pose. Each active angle carries its own reflection count (default: 1; capped per-angle by the game data maximum). Removing or changing to an incompatible pose discards active angles that are no longer valid.
+_Avoid_: visible angle, enabled angle, shown angle
+
+**Reflection count**:
+The number of bounces the user has configured for a given active angle. Controlled per active angle via +/− UI. The game allows unlimited reflections, but a per-angle cap from the game data is enforced as a practical ceiling.
+_Avoid_: bounce count, bounces
+
+**Down angle**:
+A unified UI concept representing the downward swing trajectory, which resolves to either `air-down` or `ground-down` game data depending on whether the current pose is grounded (`grounded: true`). The two underlying angles have different degrees (e.g. 35° vs 25°) but are presented to the user as a single "down" choice. Switching to a grounded pose while "down" is active automatically uses the grounded-down degrees; switching to an aerial pose uses the air-down degrees.
+_Avoid_: airdown, grounddown (use "down" in UI; distinguish air-down/ground-down only when referring to game data)
+
 ## Flagged ambiguities
 
 _(none yet)_
