@@ -1,4 +1,4 @@
-import type { Angle } from "@/data/types";
+import type { Angle, Box } from "@/data/types";
 
 export interface Point {
   x: number;
@@ -17,8 +17,16 @@ export interface Segment {
   end: Point;
 }
 
+export type TerminationKind = "hitbox" | "hurtbox";
+
 export interface BallPath {
   segments: Segment[];
+  termination?: { kind: TerminationKind; box: Box };
+}
+
+export interface DefenderBoxes {
+  hitboxes: Box[];
+  hurtboxes: Box[];
 }
 
 const MAX_REFLECTIONS = 10;
@@ -26,6 +34,29 @@ const EPSILON = 0.5;
 
 function toRad(degrees: number): number {
   return (degrees * Math.PI) / 180;
+}
+
+function rayBoxIntersectT(start: Point, dx: number, dy: number, box: Box): number {
+  const [bx, by, bw, bh] = box;
+  let tMin = -Infinity;
+  let tMax = Infinity;
+  if (Math.abs(dx) > 1e-9) {
+    const t1 = (bx - start.x) / dx;
+    const t2 = (bx + bw - start.x) / dx;
+    tMin = Math.max(tMin, Math.min(t1, t2));
+    tMax = Math.min(tMax, Math.max(t1, t2));
+  } else if (start.x < bx || start.x > bx + bw) {
+    return Infinity;
+  }
+  if (Math.abs(dy) > 1e-9) {
+    const t1 = (by - start.y) / dy;
+    const t2 = (by + bh - start.y) / dy;
+    tMin = Math.max(tMin, Math.min(t1, t2));
+    tMax = Math.min(tMax, Math.max(t1, t2));
+  } else if (start.y < by || start.y > by + bh) {
+    return Infinity;
+  }
+  return tMin > tMax || tMax <= 0 ? Infinity : Math.max(tMin, 0);
 }
 
 function rotatePoint(p: Point, degrees: number): Point {
@@ -74,12 +105,14 @@ export function computeBallPath(
   angle: Angle,
   start: Point,
   stageBounds: StageBounds,
-  options: { reflections: number }
+  options: { reflections: number },
+  defender?: DefenderBoxes
 ): BallPath {
   const maxReflections = Math.min(options.reflections, MAX_REFLECTIONS);
   const segments: Segment[] = [];
   let pos = { ...start };
   let degrees = angle.degrees;
+  let termination: BallPath["termination"];
 
   let velocity = { x: 0, y: 0 };
   let turnRate = 0;
@@ -154,7 +187,31 @@ export function computeBallPath(
       end = rayToBounds(pos, degrees, stageBounds);
     }
 
+    if (defender && !angle.bunt && !angle.pong) {
+      const rad = toRad(degrees);
+      const dx = Math.cos(rad);
+      const dy = Math.sin(rad);
+      let bestT = Infinity;
+      let bestKind: TerminationKind | undefined;
+      let bestBox: Box | undefined;
+      for (const box of defender.hitboxes) {
+        const t = rayBoxIntersectT(pos, dx, dy, box);
+        if (t < bestT) { bestT = t; bestKind = "hitbox"; bestBox = box; }
+      }
+      for (const box of defender.hurtboxes) {
+        const t = rayBoxIntersectT(pos, dx, dy, box);
+        if (t < bestT) { bestT = t; bestKind = "hurtbox"; bestBox = box; }
+      }
+      const segDist = Math.hypot(end.x - pos.x, end.y - pos.y);
+      if (bestT < segDist) {
+        end = { x: pos.x + dx * bestT, y: pos.y + dy * bestT };
+        termination = { kind: bestKind!, box: bestBox! };
+      }
+    }
+
     segments.push({ start: { ...pos }, end: { ...end } });
+
+    if (termination) break;
 
     if (angle.bunt) {
       // Ceiling hit: reset velocity and continue. Floor/side hit: stop.
@@ -181,5 +238,5 @@ export function computeBallPath(
     pos = { ...end };
   }
 
-  return { segments };
+  return termination ? { segments, termination } : { segments };
 }

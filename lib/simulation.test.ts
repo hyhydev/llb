@@ -165,6 +165,60 @@ describe("computeBallPath", () => {
     });
   });
 
+  describe("defender termination", () => {
+    it("path terminates at first intersection with a defender hurtbox", () => {
+      // 0° rightward from x=10 y=50; hurtbox spans x=60-80 y=40-60
+      const path = computeBallPath(
+        { name: "t", degrees: 0, validWhen: [] },
+        { x: 10, y: 50 },
+        bounds,
+        { reflections: 5 },
+        { hurtboxes: [[60, 40, 20, 20]], hitboxes: [] }
+      );
+      expect(path.segments).toHaveLength(1);
+      expect(path.segments[0].end.x).toBeCloseTo(60);
+      expect(path.segments[0].end.y).toBeCloseTo(50);
+      expect(path.termination?.kind).toBe("hurtbox");
+    });
+
+    it("path terminates at hitbox when hitbox is closer than hurtbox", () => {
+      // hitbox at x=55, hurtbox at x=65; ball travels right
+      const path = computeBallPath(
+        { name: "t", degrees: 0, validWhen: [] },
+        { x: 10, y: 50 },
+        bounds,
+        { reflections: 5 },
+        { hitboxes: [[55, 40, 10, 20]], hurtboxes: [[65, 40, 10, 20]] }
+      );
+      expect(path.segments[0].end.x).toBeCloseTo(55);
+      expect(path.termination?.kind).toBe("hitbox");
+    });
+
+    it("hitbox wins when hitbox and hurtbox are at the same distance", () => {
+      // both start at x=60, same left edge
+      const path = computeBallPath(
+        { name: "t", degrees: 0, validWhen: [] },
+        { x: 10, y: 50 },
+        bounds,
+        { reflections: 5 },
+        { hitboxes: [[60, 40, 20, 20]], hurtboxes: [[60, 40, 20, 20]] }
+      );
+      expect(path.termination?.kind).toBe("hitbox");
+    });
+
+    it("no termination when defender is not in the path", () => {
+      // ball travels right, defender is above the path
+      const path = computeBallPath(
+        { name: "t", degrees: 0, validWhen: [] },
+        { x: 10, y: 50 },
+        bounds,
+        { reflections: 0 },
+        { hitboxes: [[60, 10, 20, 20]], hurtboxes: [] }
+      );
+      expect(path.termination).toBeUndefined();
+    });
+  });
+
   describe("straight lines", () => {
     it("upward shot (-90°) hits the top boundary", () => {
       const path = computeBallPath(

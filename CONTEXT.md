@@ -52,11 +52,6 @@ _Avoid_: collision box
 A rectangular region defining the physical extent of the character — where they can be hit and how much space they occupy on the stage. Rendered in blue in the tool. Each pose has at least one hurtbox, stored in sprite-local coordinates `[x, y, width, height]`. The hurtbox is the authoritative boundary for stage clamping: when a character is dragged, only the hurtbox is required to stay within the playable bounds — the sprite and any hitbox overhang are free to extend into walls. The bottom edge of the first hurtbox (`hurtbox[1] + hurtbox[3]`) is the character's ground contact point (feet), used to align the character to the stage floor. The hurtbox is typically narrower and shorter than the full sprite due to transparent padding in the sprite image.
 _Avoid_: damage box
 
-<<<<<<< HEAD
-=======
-<<<<<<< Updated upstream
-=======
->>>>>>> 20b32ef (context update)
 **Sprite**:
 The PNG image for a character in a given pose. Larger than the character model — there is transparent padding around the character, so the sprite dimensions do not correspond to the character's physical extent. Positions and sizes in `hurtboxes` and `hitboxes` are expressed in sprite-local coordinates, where `(0, 0)` is the sprite's top-left corner. The character is rendered centred on their stage position, so the sprite's top-left is at `pos - spriteSize / 2`. All sprites are right-facing (`_r.png`); left-facing is achieved by a horizontal SVG mirror transform around the character centre.
 _Avoid_: image, texture, frame
@@ -65,8 +60,6 @@ _Avoid_: image, texture, frame
 The horizontal direction a character is oriented — right (default) or left (mirrored). Mirroring is a visual-only SVG transform; it does not change hitbox or hurtbox coordinates or affect ball path calculations.
 _Avoid_: direction, orientation, side
 
-<<<<<<< HEAD
-=======
 **Ball**:
 The game entity that travels across the stage and is hit by characters. In the simulation tool, the ball is modelled as a property of a staged character with the attacker role — a position (in stage coordinates) draggable within the character's active hitbox, acting as the origin point for ball path simulation. The exact contact point within the hitbox matters: it determines where the ball path starts. A defender has no ball and no ball path is simulated from them. Multiple attackers can coexist in the free tool, each with their own ball; the one-ball constraint (one attacker, one defender) is a puzzle-level rule.
 _Avoid_: projectile, puck, orb
@@ -75,8 +68,6 @@ _Avoid_: projectile, puck, orb
 A property of a staged character that determines whether they are hitting the ball or receiving it. An attacker has a ball and produces simulated ball paths. A defender has no ball and represents the player trying to intercept the ball path. Every staged character is either an attacker or a defender — there is no neutral role.
 _Avoid_: side, team, type
 
->>>>>>> Stashed changes
->>>>>>> 20b32ef (context update)
 **Simulation**:
 The pure TypeScript function that computes a ball path from an angle's degrees, a ball position (within the attacker's hitbox union), stage bounds, and any defender hitboxes and hurtboxes — producing a series of line segments, reflection points, and an optional termination. The path terminates early at the first intersection with a defender's hitbox or hurtbox; if both are intersected at the same distance, the hitbox wins. When the path terminates, the intersected box is filled (using its existing hitbox or hurtbox color) to signal whether the defender caught the ball (hitbox) or was hit by it (hurtbox). Has no rendering dependency; used by both the visualisation tool and puzzle generation.
 _Avoid_: physics, engine, renderer

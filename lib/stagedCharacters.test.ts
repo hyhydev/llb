@@ -35,6 +35,53 @@ describe("addCharacter", () => {
   });
 });
 
+describe("role and ballPosition", () => {
+  it("new character defaults to role attacker", () => {
+    const result = addCharacter([], "Toxic", defaultPos);
+    expect(result[0].role).toBe("attacker");
+  });
+
+  it("new attacker has ballPosition at hitbox union centroid", () => {
+    const result = addCharacter([], "Toxic", defaultPos);
+    // Toxic swing: hitbox [85, 14, 124, 138] → centroid {x: 147, y: 83}
+    expect(result[0].ballPosition).toEqual({ x: 147, y: 83 });
+  });
+
+  it("pose change resets ballPosition to centroid of new pose's hitboxes", () => {
+    const list = addCharacter([], "Toxic", defaultPos);
+    const id = list[0].id;
+    const result = updateCharacter(list, id, { pose: "smash" });
+    // Toxic smash: hitboxes [34,24,110,100] and [89,93,110,138]
+    // union: minX=34, maxX=199, minY=24, maxY=231 → centroid {x: 116.5, y: 127.5}
+    expect(result[0].ballPosition).toEqual({ x: 116.5, y: 127.5 });
+  });
+
+  it("pose change to pose with no hitboxes sets ballPosition null", () => {
+    const list = addCharacter([], "Toxic", defaultPos);
+    const id = list[0].id;
+    const result = updateCharacter(list, id, { pose: "halfcrouch" });
+    expect(result[0].ballPosition).toBeNull();
+  });
+
+  it("switching role to defender clears ballPosition", () => {
+    const list = addCharacter([], "Toxic", defaultPos);
+    const id = list[0].id;
+    const result = updateCharacter(list, id, { role: "defender" });
+    expect(result[0].role).toBe("defender");
+    expect(result[0].ballPosition).toBeNull();
+  });
+
+  it("switching role to attacker resets ballPosition to hitbox centroid", () => {
+    let list = addCharacter([], "Toxic", defaultPos);
+    const id = list[0].id;
+    list = updateCharacter(list, id, { role: "defender" });
+    const result = updateCharacter(list, id, { role: "attacker" });
+    expect(result[0].role).toBe("attacker");
+    // Toxic swing centroid
+    expect(result[0].ballPosition).toEqual({ x: 147, y: 83 });
+  });
+});
+
 describe("removeCharacter", () => {
   it("removes the character with the given id", () => {
     const list = addCharacter([], "Toxic", defaultPos);
