@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { characterJSON } from "@/data/characters";
-import { getValidAnglesForPose, getAvailablePoses } from "./character";
+import { getValidAnglesForPose, getAvailablePoses, getPickableAngles } from "./character";
 
 describe("getValidAnglesForPose", () => {
   it("returns angles whose validWhen includes the given pose", () => {
@@ -20,6 +20,39 @@ describe("getValidAnglesForPose", () => {
     const toxic = characterJSON["Toxic"];
     const angles = getValidAnglesForPose(toxic, "nonexistent-pose");
     expect(angles).toHaveLength(0);
+  });
+});
+
+describe("getPickableAngles", () => {
+  it("returns angle names valid for the pose", () => {
+    const toxic = characterJSON["Toxic"];
+    const pickable = getPickableAngles(toxic, "swing", []);
+    expect(pickable).toContain("up");
+  });
+
+  it("unifies air-down and ground-down as 'down'", () => {
+    const toxic = characterJSON["Toxic"];
+    const pickable = getPickableAngles(toxic, "swing", []);
+    expect(pickable).toContain("down");
+    expect(pickable).not.toContain("air-down");
+    expect(pickable).not.toContain("ground-down");
+  });
+
+  it("excludes already-active angles", () => {
+    const toxic = characterJSON["Toxic"];
+    const pickable = getPickableAngles(toxic, "swing", [{ name: "up", reflectionCount: 1 }]);
+    expect(pickable).not.toContain("up");
+  });
+
+  it("excludes already-active 'down' when unified", () => {
+    const toxic = characterJSON["Toxic"];
+    const pickable = getPickableAngles(toxic, "swing", [{ name: "down", reflectionCount: 1 }]);
+    expect(pickable).not.toContain("down");
+  });
+
+  it("returns empty array when no angles are valid for the pose", () => {
+    const toxic = characterJSON["Toxic"];
+    expect(getPickableAngles(toxic, "halfcrouch", [])).toEqual([]);
   });
 });
 

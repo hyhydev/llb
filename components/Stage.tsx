@@ -6,7 +6,6 @@ import { characterJSON } from "@/data/characters";
 import { clampToStage, stageBoundsFrom } from "@/lib/stage";
 import { computeBallPath } from "@/lib/simulation";
 import type { DefenderBoxes } from "@/lib/simulation";
-import { getValidAnglesForPose } from "@/lib/character";
 import { BallPathLayer } from "@/components/BallPathLayer";
 import type { BallPathEntry } from "@/components/BallPathLayer";
 import { SpecialsLayer } from "@/components/SpecialsLayer";
@@ -154,23 +153,29 @@ export function Stage({ stageName, stagedCharacters, onMoveCharacter, onMoveBall
             ? `translate(${sc.position.x}, 0) scale(-1, 1) translate(${-sc.position.x}, 0)`
             : undefined;
 
-        // Ball paths only for attackers with a ball position
+        // Ball paths only for attackers with a ball position and active angles
         let ballPathEntries: BallPathEntry[] = [];
         let ballStagePos: { x: number; y: number } | null = null;
-        if (sc.role === "attacker" && sc.ballPosition) {
+        if (sc.role === "attacker" && sc.ballPosition && sc.activeAngles.length > 0) {
           const mirrored = sc.facing === "left";
           ballStagePos = mirrored
             ? { x: sc.position.x + charW / 2 - sc.ballPosition.x, y: sc.position.y - charH / 2 + sc.ballPosition.y }
             : { x: sc.position.x - charW / 2 + sc.ballPosition.x, y: sc.position.y - charH / 2 + sc.ballPosition.y };
-          const validAngles = getValidAnglesForPose(character, sc.pose);
-          ballPathEntries = validAngles.map((a) => {
-            const effectiveAngle = mirrored ? { ...a, degrees: 180 - a.degrees } : a;
-            return {
-              path: computeBallPath(effectiveAngle, ballStagePos!, bounds, { reflections: 5 }, hasDefender ? defenderBoxes : undefined),
-              angleName: a.name,
+          const isGrounded = "grounded" in poseData && poseData.grounded === true;
+          ballPathEntries = sc.activeAngles.flatMap((activeAngle) => {
+            let angleDataName = activeAngle.name;
+            if (activeAngle.name === "down") {
+              angleDataName = isGrounded ? "ground-down" : "air-down";
+            }
+            const angleData = character.angles.find((a) => a.name === angleDataName);
+            if (!angleData) return [];
+            const effectiveAngle = mirrored ? { ...angleData, degrees: 180 - angleData.degrees } : angleData;
+            return [{
+              path: computeBallPath(effectiveAngle, ballStagePos!, bounds, { reflections: activeAngle.reflectionCount }, hasDefender ? defenderBoxes : undefined),
+              angleName: activeAngle.name,
               color: character.color,
               strokeColor: character.strokeColor,
-            };
+            }];
           });
         }
 

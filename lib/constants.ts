@@ -1,0 +1,1 @@
+export const MAX_REFLECTIONS_DEFAULT = 10;

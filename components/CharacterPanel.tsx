@@ -1,14 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { characterJSON } from "@/data/characters";
 import { stageJSON } from "@/data/stages";
-import { getAvailablePoses } from "@/lib/character";
-import type { StagedCharacter } from "@/lib/stagedCharacters";
+import { getAvailablePoses, getPickableAngles } from "@/lib/character";
+import { Button } from "@/components/ui/button";
+import type { StagedCharacter, SpecialState } from "@/lib/stagedCharacters";
 
 const CHARACTER_NAMES = Object.keys(characterJSON) as (keyof typeof characterJSON)[];
 const STAGE_NAMES = Object.keys(stageJSON) as (keyof typeof stageJSON)[];
-
-import type { SpecialState } from "@/lib/stagedCharacters";
 
 interface Props {
   stageName: keyof typeof stageJSON;
@@ -20,6 +20,9 @@ interface Props {
   onToggleFacing: (id: string) => void;
   onToggleRole: (id: string) => void;
   onSpecialChange: (id: string, patch: Partial<SpecialState>) => void;
+  onAddAngle: (id: string, angleName: string) => void;
+  onRemoveAngle: (id: string, angleName: string) => void;
+  onUpdateAngleCount: (id: string, angleName: string, count: number) => void;
 }
 
 export function CharacterPanel({
@@ -32,6 +35,9 @@ export function CharacterPanel({
   onToggleFacing,
   onToggleRole,
   onSpecialChange,
+  onAddAngle,
+  onRemoveAngle,
+  onUpdateAngleCount,
 }: Props) {
   return (
     <div className="flex flex-col gap-4 p-4 w-64 bg-zinc-800 text-zinc-100 overflow-y-auto h-full text-sm">
@@ -122,12 +128,95 @@ export function CharacterPanel({
                   >
                     {sc.role === "attacker" ? "attacker" : "defender"}
                   </button>
+                  {sc.role === "attacker" && (
+                    <AngleControls
+                      sc={sc}
+                      onAddAngle={onAddAngle}
+                      onRemoveAngle={onRemoveAngle}
+                      onUpdateAngleCount={onUpdateAngleCount}
+                    />
+                  )}
                   <SpecialControls sc={sc} onSpecialChange={onSpecialChange} />
                 </div>
               );
             })}
           </div>
         </section>
+      )}
+    </div>
+  );
+}
+
+// ── Angle management ────────────────────────────────────────────────────────
+
+function AngleControls({
+  sc,
+  onAddAngle,
+  onRemoveAngle,
+  onUpdateAngleCount,
+}: {
+  sc: StagedCharacter;
+  onAddAngle: (id: string, angleName: string) => void;
+  onRemoveAngle: (id: string, angleName: string) => void;
+  onUpdateAngleCount: (id: string, angleName: string, count: number) => void;
+}) {
+  const [selected, setSelected] = useState("");
+  const character = characterJSON[sc.characterName];
+  const pickable = getPickableAngles(character, sc.pose, sc.activeAngles);
+
+  function handleAdd() {
+    if (!selected) return;
+    onAddAngle(sc.id, selected);
+    setSelected("");
+  }
+
+  return (
+    <div className="flex flex-col gap-1 mt-1">
+      <p className="text-xs text-zinc-400 uppercase tracking-wide">Angles</p>
+      {sc.activeAngles.map((a) => (
+        <div key={a.name} className="flex items-center gap-1 text-xs">
+          <span className="flex-1 truncate">{a.name}</span>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            onClick={() => onUpdateAngleCount(sc.id, a.name, a.reflectionCount - 1)}
+          >
+            −
+          </Button>
+          <span className="w-4 text-center">{a.reflectionCount}</span>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            onClick={() => onUpdateAngleCount(sc.id, a.name, a.reflectionCount + 1)}
+          >
+            +
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            onClick={() => onRemoveAngle(sc.id, a.name)}
+            className="text-zinc-400 hover:text-red-400"
+          >
+            ✕
+          </Button>
+        </div>
+      ))}
+      {pickable.length > 0 && (
+        <div className="flex gap-1">
+          <select
+            value={selected}
+            onChange={(e) => setSelected(e.target.value)}
+            className="flex-1 bg-zinc-600 rounded px-1 py-0.5 text-zinc-100 text-xs"
+          >
+            <option value="">add angle…</option>
+            {pickable.map((name) => (
+              <option key={name} value={name}>{name}</option>
+            ))}
+          </select>
+          <Button size="xs" onClick={handleAdd} disabled={!selected}>
+            +
+          </Button>
+        </div>
       )}
     </div>
   );
