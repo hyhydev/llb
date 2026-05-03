@@ -25,13 +25,27 @@ export function stageBoundsFrom(stage: {
 }
 
 /**
- * Clamps a character's center position so the sprite stays within the playable stage bounds.
+ * Clamps a character's center position so its hurtbox stays within the playable stage bounds.
+ * Without a hurtbox the full sprite dimensions are used as the boundary.
+ * With a hurtbox [x, y, w, h] (in sprite-local coords), only the hurtbox is constrained —
+ * hitboxes and sprite overhang are free to extend outside the stage.
  */
-export function clampToStage(pos: Point, bounds: Bounds, character: Size): Point {
-  const halfW = character.width / 2;
-  const halfH = character.height / 2;
+export function clampToStage(
+  pos: Point,
+  bounds: Bounds,
+  sprite: Size,
+  hurtbox?: readonly [number, number, number, number],
+): Point {
+  const halfW = sprite.width / 2;
+  const halfH = sprite.height / 2;
+
+  const hurtL = hurtbox?.[0] ?? 0;
+  const hurtR = hurtbox ? hurtbox[0] + hurtbox[2] : sprite.width;
+  const hurtBottom = hurtbox ? hurtbox[1] + hurtbox[3] : sprite.height;
+  const feetFromCenter = hurtBottom - halfH;
+
   return {
-    x: Math.max(bounds.left + halfW, Math.min(bounds.right - halfW, pos.x)),
-    y: Math.max(bounds.top + halfH, Math.min(bounds.bottom - halfH, pos.y)),
+    x: Math.max(bounds.left + halfW - hurtL, Math.min(bounds.right + halfW - hurtR, pos.x)),
+    y: Math.max(bounds.top + halfH, Math.min(bounds.bottom - feetFromCenter, pos.y)),
   };
 }
