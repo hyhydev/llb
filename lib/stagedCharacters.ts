@@ -10,6 +10,25 @@ function hitboxUnionCentroid(hitboxes: Box[]): { x: number; y: number } | null {
   return { x: (minX + maxX) / 2, y: (minY + maxY) / 2 };
 }
 
+export interface GridTeleport {
+  direction: { x: number; y: number };
+  spike: boolean;
+}
+
+export interface SpecialState {
+  jetBubble?: boolean;
+  sonataStep?: 1 | 2 | 3;
+  gridTeleports?: GridTeleport[];
+  reticlePosition?: { x: number; y: number } | null;
+  sprayPosition?: { x: number; y: number } | null;
+  ashesLeft?: boolean;
+  ashesRight?: boolean;
+  cuffEnabled?: boolean;
+  cuffHalfPull?: boolean;
+  cuffFullPull?: boolean;
+  candySpecial?: boolean;
+}
+
 export interface StagedCharacter {
   id: string;
   characterName: keyof typeof characterJSON;
@@ -18,6 +37,7 @@ export interface StagedCharacter {
   position: { x: number; y: number };
   role: "attacker" | "defender";
   ballPosition: { x: number; y: number } | null;
+  special: SpecialState;
 }
 
 let _nextId = 0;
@@ -41,6 +61,7 @@ export function addCharacter(
       position,
       role: "attacker",
       ballPosition: hitboxUnionCentroid(character.poses[0].hitboxes),
+      special: {},
     },
   ];
 }
@@ -49,14 +70,18 @@ export function removeCharacter(list: StagedCharacter[], id: string): StagedChar
   return list.filter((c) => c.id !== id);
 }
 
+type CharacterPatch = Partial<Pick<StagedCharacter, "pose" | "facing" | "position" | "role" | "ballPosition">> & {
+  special?: Partial<SpecialState>;
+};
+
 export function updateCharacter(
   list: StagedCharacter[],
   id: string,
-  patch: Partial<Pick<StagedCharacter, "pose" | "facing" | "position" | "role" | "ballPosition">>,
+  patch: CharacterPatch,
 ): StagedCharacter[] {
   return list.map((c) => {
     if (c.id !== id) return c;
-    const updated = { ...c, ...patch };
+    const updated: StagedCharacter = { ...c, ...patch, special: { ...c.special, ...patch.special } };
     if ("pose" in patch && patch.pose !== undefined) {
       const character = characterJSON[c.characterName];
       const newPose = character.poses.find((p) => p.name === patch.pose);

@@ -9,7 +9,8 @@ import type { DefenderBoxes } from "@/lib/simulation";
 import { getValidAnglesForPose } from "@/lib/character";
 import { BallPathLayer } from "@/components/BallPathLayer";
 import type { BallPathEntry } from "@/components/BallPathLayer";
-import type { StagedCharacter } from "@/lib/stagedCharacters";
+import { SpecialsLayer } from "@/components/SpecialsLayer";
+import type { StagedCharacter, SpecialState } from "@/lib/stagedCharacters";
 import type { Box } from "@/data/types";
 
 function clampToHitboxUnion(
@@ -35,13 +36,16 @@ interface Props {
   stagedCharacters: StagedCharacter[];
   onMoveCharacter: (id: string, position: { x: number; y: number }) => void;
   onMoveBall: (id: string, ballPosition: { x: number; y: number }) => void;
+  onSpecialPositionChange: (id: string, patch: Partial<SpecialState>) => void;
 }
 
 type DragTarget =
   | { kind: "character"; id: string; offsetX: number; offsetY: number }
-  | { kind: "ball"; id: string };
+  | { kind: "ball"; id: string }
+  | { kind: "reticle"; id: string }
+  | { kind: "spray"; id: string };
 
-export function Stage({ stageName, stagedCharacters, onMoveCharacter, onMoveBall }: Props) {
+export function Stage({ stageName, stagedCharacters, onMoveCharacter, onMoveBall, onSpecialPositionChange }: Props) {
   const stage = stageJSON[stageName];
   const [imgW, imgH] = stage.imageSize;
   const bounds = stageBoundsFrom(stage);
@@ -72,24 +76,23 @@ export function Stage({ stageName, stagedCharacters, onMoveCharacter, onMoveBall
   function onPointerMove(e: React.PointerEvent<SVGSVGElement>) {
     if (!dragging.current) return;
     const pt = toSVGPoint(e);
+    const d = dragging.current;
 
-    if (dragging.current.kind === "character") {
-      const sc = stagedCharacters.find((c) => c.id === dragging.current!.id);
+    if (d.kind === "character") {
+      const sc = stagedCharacters.find((c) => c.id === d.id);
       if (!sc) return;
       const character = characterJSON[sc.characterName];
       const poseData = character.poses.find((p) => p.name === sc.pose) ?? character.poses[0];
       const [charW, charH] = poseData.imgSize;
       const hurtbox = poseData.hurtboxes[0] as readonly [number, number, number, number] | undefined;
-      const d = dragging.current as Extract<DragTarget, { kind: "character" }>;
       const raw = { x: pt.x - d.offsetX, y: pt.y - d.offsetY };
       onMoveCharacter(sc.id, clampToStage(raw, bounds, { width: charW, height: charH }, hurtbox));
-    } else {
-      const sc = stagedCharacters.find((c) => c.id === dragging.current!.id);
+    } else if (d.kind === "ball") {
+      const sc = stagedCharacters.find((c) => c.id === d.id);
       if (!sc || sc.role !== "attacker") return;
       const character = characterJSON[sc.characterName];
       const poseData = character.poses.find((p) => p.name === sc.pose) ?? character.poses[0];
       const [charW, charH] = poseData.imgSize;
-      // Convert stage coords to right-facing sprite-local (hitboxes are stored right-facing)
       const rawLocalX = pt.x - sc.position.x + charW / 2;
       const localX = sc.facing === "left" ? charW - rawLocalX : rawLocalX;
       const localY = pt.y - sc.position.y + charH / 2;
@@ -97,6 +100,10 @@ export function Stage({ stageName, stagedCharacters, onMoveCharacter, onMoveBall
       if (hitboxes.length > 0) {
         onMoveBall(sc.id, clampToHitboxUnion({ x: localX, y: localY }, hitboxes));
       }
+    } else if (d.kind === "reticle") {
+      onSpecialPositionChange(d.id, { reticlePosition: { x: pt.x, y: pt.y } });
+    } else if (d.kind === "spray") {
+      onSpecialPositionChange(d.id, { sprayPosition: { x: pt.x, y: pt.y } });
     }
   }
 
@@ -167,9 +174,16 @@ export function Stage({ stageName, stagedCharacters, onMoveCharacter, onMoveBall
           });
         }
 
+        const reticlePos = sc.special.reticlePosition;
+        const sprayPos = sc.special.sprayPosition;
+
         return (
           <g key={sc.id}>
-            <BallPathLayer entries={ballPathEntries} />
+            <SpecialsLayer sc={sc} stageBounds={bounds} />
+            <BallPathLayer entries={sc.characterName === "Candyman" && sc.special.candySpecial
+              ? ballPathEntries.map((e) => ({ ...e, strokeColor: ("candyballStrokeColor" in character ? (character as { candyballStrokeColor: string }).candyballStrokeColor : undefined) ?? e.strokeColor }))
+              : ballPathEntries}
+            />
             <image
               href={`/characters/${character.img_name}_${poseData.name}_r.png`}
               x={sc.position.x - charW / 2}
@@ -190,6 +204,34 @@ export function Stage({ stageName, stagedCharacters, onMoveCharacter, onMoveBall
                 strokeWidth={2}
                 onPointerDown={(e) => onBallPointerDown(e, sc)}
                 style={{ cursor: "crosshair" }}
+              />
+            )}
+            {reticlePos && (
+              <circle
+                cx={reticlePos.x}
+                cy={reticlePos.y}
+                r={18}
+                fill="transparent"
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                  e.currentTarget.setPointerCapture(e.pointerId);
+                  dragging.current = { kind: "reticle", id: sc.id };
+                }}
+                style={{ cursor: "move" }}
+              />
+            )}
+            {sprayPos && (
+              <circle
+                cx={sprayPos.x}
+                cy={sprayPos.y}
+                r={24}
+                fill="transparent"
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                  e.currentTarget.setPointerCapture(e.pointerId);
+                  dragging.current = { kind: "spray", id: sc.id };
+                }}
+                style={{ cursor: "move" }}
               />
             )}
           </g>

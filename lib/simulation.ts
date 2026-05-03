@@ -17,11 +17,11 @@ export interface Segment {
   end: Point;
 }
 
-export type TerminationKind = "hitbox" | "hurtbox";
+export type TerminationKind = "hitbox" | "hurtbox" | "wall";
 
 export interface BallPath {
   segments: Segment[];
-  termination?: { kind: TerminationKind; box: Box };
+  termination?: { kind: TerminationKind; box?: Box };
 }
 
 export interface DefenderBoxes {
@@ -218,12 +218,14 @@ export function computeBallPath(
       if (buntHitBoundary && !buntHitCeiling) break;
       i--;
     } else if (angle.pong) {
-      const hitsBoundary =
+      const hitsWall =
         end.x >= stageBounds.right - EPSILON ||
-        end.x <= stageBounds.left + EPSILON ||
+        end.x <= stageBounds.left + EPSILON;
+      const hitsFloorCeiling =
         end.y >= stageBounds.bottom - EPSILON ||
         end.y <= stageBounds.top + EPSILON;
-      if (hitsBoundary) break;
+      if (hitsWall) { termination = { kind: "wall" }; break; }
+      if (hitsFloorCeiling) break;
       i--;
     } else if (i < maxReflections) {
       const { degrees: reflected, cornerHit } = reflectDegrees(
