@@ -1,6 +1,11 @@
 /** [x, y, width, height] */
 export type Box = [number, number, number, number];
 
+export interface ActiveAngle {
+  name: string;
+  reflectionCount: number;
+}
+
 export interface Hitbox {
   /** [x, y, width, height] */
   box: Box;

@@ -9,6 +9,9 @@ import {
   addCharacter,
   removeCharacter,
   updateCharacter,
+  addAngleToCharacter,
+  removeAngleFromCharacter,
+  updateAngleCount,
   type StagedCharacter,
   type SpecialState,
 } from "@/lib/stagedCharacters";
@@ -63,6 +66,18 @@ export default function Home() {
     setStagedCharacters((prev) => updateCharacter(prev, id, { special: patch }));
   }
 
+  function handleAddAngle(id: string, angleName: string) {
+    setStagedCharacters((prev) => addAngleToCharacter(prev, id, angleName));
+  }
+
+  function handleRemoveAngle(id: string, angleName: string) {
+    setStagedCharacters((prev) => removeAngleFromCharacter(prev, id, angleName));
+  }
+
+  function handleUpdateAngleCount(id: string, angleName: string, count: number) {
+    setStagedCharacters((prev) => updateAngleCount(prev, id, angleName, count));
+  }
+
   return (
     <div className="flex h-screen bg-zinc-900 overflow-hidden">
       <CharacterPanel
@@ -75,6 +90,9 @@ export default function Home() {
         onToggleFacing={handleToggleFacing}
         onToggleRole={handleToggleRole}
         onSpecialChange={handleSpecialChange}
+        onAddAngle={handleAddAngle}
+        onRemoveAngle={handleRemoveAngle}
+        onUpdateAngleCount={handleUpdateAngleCount}
       />
       <main className="flex-1 min-w-0 flex items-center justify-center overflow-auto p-4">
         <Stage

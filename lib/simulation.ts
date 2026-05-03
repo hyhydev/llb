@@ -1,4 +1,5 @@
 import type { Angle, Box } from "@/data/types";
+import { MAX_REFLECTIONS_DEFAULT } from "./constants";
 
 export interface Point {
   x: number;
@@ -29,7 +30,6 @@ export interface DefenderBoxes {
   hurtboxes: Box[];
 }
 
-const MAX_REFLECTIONS = 10;
 const EPSILON = 0.5;
 
 function toRad(degrees: number): number {
@@ -108,7 +108,7 @@ export function computeBallPath(
   options: { reflections: number },
   defender?: DefenderBoxes
 ): BallPath {
-  const maxReflections = Math.min(options.reflections, MAX_REFLECTIONS);
+  const maxReflections = Math.min(options.reflections, MAX_REFLECTIONS_DEFAULT);
   const segments: Segment[] = [];
   let pos = { ...start };
   let degrees = angle.degrees;
