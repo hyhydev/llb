@@ -1,5 +1,9 @@
 @AGENTS.md
 
+## Component library
+
+shadcn/ui is the standard component library. Use shadcn components for all new UI. Do not write custom Tailwind component primitives (buttons, selects, inputs, etc.) when a shadcn equivalent exists.
+
 ## Agent skills
 
 ### Issue tracker
