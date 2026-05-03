@@ -60,8 +60,16 @@ _Avoid_: image, texture, frame
 The horizontal direction a character is oriented — right (default) or left (mirrored). Mirroring is a visual-only SVG transform; it does not change hitbox or hurtbox coordinates or affect ball path calculations.
 _Avoid_: direction, orientation, side
 
+**Ball**:
+The game entity that travels across the stage and is hit by characters. In the simulation tool, the ball is modelled as a property of a staged character with the attacker role — a position (in stage coordinates) draggable within the character's active hitbox, acting as the origin point for ball path simulation. The exact contact point within the hitbox matters: it determines where the ball path starts. A defender has no ball and no ball path is simulated from them. Multiple attackers can coexist in the free tool, each with their own ball; the one-ball constraint (one attacker, one defender) is a puzzle-level rule.
+_Avoid_: projectile, puck, orb
+
+**Role**:
+A property of a staged character that determines whether they are hitting the ball or receiving it. An attacker has a ball and produces simulated ball paths. A defender has no ball and represents the player trying to intercept the ball path. Every staged character is either an attacker or a defender — there is no neutral role.
+_Avoid_: side, team, type
+
 **Simulation**:
-The pure TypeScript function that computes a ball path from an angle's degrees, start position, and stage bounds — producing a series of line segments and reflection points. Has no rendering dependency; used by both the visualisation tool and puzzle generation.
+The pure TypeScript function that computes a ball path from an angle's degrees, a ball position (within the attacker's hitbox union), stage bounds, and any defender hitboxes and hurtboxes — producing a series of line segments, reflection points, and an optional termination. The path terminates early at the first intersection with a defender's hitbox or hurtbox; if both are intersected at the same distance, the hitbox wins. When the path terminates, the intersected box is filled (using its existing hitbox or hurtbox color) to signal whether the defender caught the ball (hitbox) or was hit by it (hurtbox). Has no rendering dependency; used by both the visualisation tool and puzzle generation.
 _Avoid_: physics, engine, renderer
 
 **Game data**:
