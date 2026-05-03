@@ -10,6 +10,7 @@ import {
   removeCharacter,
   updateCharacter,
   type StagedCharacter,
+  type SpecialState,
 } from "@/lib/stagedCharacters";
 
 const Stage = dynamic(() => import("@/components/Stage").then((m) => ({ default: m.Stage })), {
@@ -58,6 +59,10 @@ export default function Home() {
     setStagedCharacters((prev) => updateCharacter(prev, id, { ballPosition }));
   }
 
+  function handleSpecialChange(id: string, patch: Partial<SpecialState>) {
+    setStagedCharacters((prev) => updateCharacter(prev, id, { special: patch }));
+  }
+
   return (
     <div className="flex h-screen bg-zinc-900 overflow-hidden">
       <CharacterPanel
@@ -69,6 +74,7 @@ export default function Home() {
         onPoseChange={handlePoseChange}
         onToggleFacing={handleToggleFacing}
         onToggleRole={handleToggleRole}
+        onSpecialChange={handleSpecialChange}
       />
       <main className="flex-1 min-w-0 flex items-center justify-center overflow-auto p-4">
         <Stage
@@ -76,6 +82,7 @@ export default function Home() {
           stagedCharacters={stagedCharacters}
           onMoveCharacter={handleMoveCharacter}
           onMoveBall={handleMoveBall}
+          onSpecialPositionChange={handleSpecialChange}
         />
       </main>
     </div>

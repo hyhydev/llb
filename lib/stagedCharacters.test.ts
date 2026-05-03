@@ -4,6 +4,7 @@ import {
   removeCharacter,
   updateCharacter,
   type StagedCharacter,
+  type SpecialState,
 } from "./stagedCharacters";
 
 const defaultPos = { x: 0, y: 0 };
@@ -127,5 +128,58 @@ describe("updateCharacter", () => {
     list = addCharacter(list, "Latch", defaultPos);
     const result = updateCharacter(list, list[0].id, { pose: "smash" });
     expect(result[1].pose).toBe("swing");
+  });
+});
+
+describe("special state", () => {
+  it("addCharacter initialises special as empty object", () => {
+    const result = addCharacter([], "Jet", defaultPos);
+    expect(result[0].special).toEqual({});
+  });
+
+  it("updateCharacter sets a special field", () => {
+    const list = addCharacter([], "Jet", defaultPos);
+    const id = list[0].id;
+    const result = updateCharacter(list, id, { special: { jetBubble: true } });
+    expect(result[0].special.jetBubble).toBe(true);
+  });
+
+  it("updateCharacter merges special state rather than replacing", () => {
+    let list = addCharacter([], "Jet", defaultPos);
+    const id = list[0].id;
+    list = updateCharacter(list, id, { special: { jetBubble: true } });
+    const result = updateCharacter(list, id, { special: { candySpecial: true } });
+    expect(result[0].special.jetBubble).toBe(true);
+    expect(result[0].special.candySpecial).toBe(true);
+  });
+
+  it("updateCharacter can clear a special field by setting it to undefined", () => {
+    let list = addCharacter([], "Jet", defaultPos);
+    const id = list[0].id;
+    list = updateCharacter(list, id, { special: { jetBubble: true } });
+    const result = updateCharacter(list, id, { special: { jetBubble: undefined } });
+    expect(result[0].special.jetBubble).toBeUndefined();
+  });
+
+  it("updateCharacter special patch does not affect other characters", () => {
+    let list = addCharacter([], "Jet", defaultPos);
+    list = addCharacter(list, "Nitro", defaultPos);
+    const result = updateCharacter(list, list[0].id, { special: { jetBubble: true } });
+    expect(result[1].special).toEqual({});
+  });
+
+  it("updateCharacter sets gridTeleports array", () => {
+    const list = addCharacter([], "Grid", defaultPos);
+    const id = list[0].id;
+    const teleports = [{ direction: { x: 1, y: 0 }, spike: false }];
+    const result = updateCharacter(list, id, { special: { gridTeleports: teleports } });
+    expect(result[0].special.gridTeleports).toEqual(teleports);
+  });
+
+  it("updateCharacter sets sonataStep", () => {
+    const list = addCharacter([], "Sonata", defaultPos);
+    const id = list[0].id;
+    const result = updateCharacter(list, id, { special: { sonataStep: 2 } });
+    expect(result[0].special.sonataStep).toBe(2);
   });
 });

@@ -165,6 +165,40 @@ describe("computeBallPath", () => {
     });
   });
 
+  describe("pong wall termination", () => {
+    const wb: StageBounds = { left: 10, top: 10, right: 300, bottom: 500 };
+    const straight = (degrees: number) => ({
+      name: "spin",
+      degrees,
+      validWhen: [] as string[],
+      pong: true as const,
+      initialSpeed: 34,
+      pongStep: 2,
+      turnRate: 0,
+      maxReflections: 1,
+    });
+
+    it("pong ball hitting the right wall sets termination kind to 'wall'", () => {
+      const path = computeBallPath(straight(0), { x: 50, y: 250 }, wb, { reflections: 1 });
+      expect(path.termination?.kind).toBe("wall");
+    });
+
+    it("pong ball hitting the left wall sets termination kind to 'wall'", () => {
+      const path = computeBallPath(straight(180), { x: 250, y: 250 }, wb, { reflections: 1 });
+      expect(path.termination?.kind).toBe("wall");
+    });
+
+    it("pong ball hitting the floor has no termination", () => {
+      const path = computeBallPath(straight(90), { x: 150, y: 50 }, wb, { reflections: 1 });
+      expect(path.termination).toBeUndefined();
+    });
+
+    it("pong ball hitting the ceiling has no termination", () => {
+      const path = computeBallPath(straight(270), { x: 150, y: 450 }, wb, { reflections: 1 });
+      expect(path.termination).toBeUndefined();
+    });
+  });
+
   describe("defender termination", () => {
     it("path terminates at first intersection with a defender hurtbox", () => {
       // 0° rightward from x=10 y=50; hurtbox spans x=60-80 y=40-60
