@@ -16,6 +16,7 @@ interface Props {
   onRemove: (id: string) => void;
   onPoseChange: (id: string, pose: string) => void;
   onToggleFacing: (id: string) => void;
+  onToggleRole: (id: string) => void;
 }
 
 export function CharacterPanel({
@@ -26,6 +27,7 @@ export function CharacterPanel({
   onRemove,
   onPoseChange,
   onToggleFacing,
+  onToggleRole,
 }: Props) {
   return (
     <div className="flex flex-col gap-4 p-4 w-64 bg-zinc-800 text-zinc-100 overflow-y-auto h-full text-sm">
@@ -106,6 +108,16 @@ export function CharacterPanel({
                       {sc.facing === "right" ? "→" : "←"}
                     </button>
                   </div>
+                  <button
+                    onClick={() => onToggleRole(sc.id)}
+                    className={`w-full rounded px-2 py-0.5 text-xs font-medium ${
+                      sc.role === "attacker"
+                        ? "bg-red-700 hover:bg-red-600 text-white"
+                        : "bg-blue-700 hover:bg-blue-600 text-white"
+                    }`}
+                  >
+                    {sc.role === "attacker" ? "attacker" : "defender"}
+                  </button>
                 </div>
               );
             })}

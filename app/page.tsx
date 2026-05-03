@@ -46,6 +46,18 @@ export default function Home() {
     setStagedCharacters((prev) => updateCharacter(prev, id, { position }));
   }
 
+  function handleToggleRole(id: string) {
+    setStagedCharacters((prev) => {
+      const sc = prev.find((c) => c.id === id);
+      if (!sc) return prev;
+      return updateCharacter(prev, id, { role: sc.role === "attacker" ? "defender" : "attacker" });
+    });
+  }
+
+  function handleMoveBall(id: string, ballPosition: { x: number; y: number }) {
+    setStagedCharacters((prev) => updateCharacter(prev, id, { ballPosition }));
+  }
+
   return (
     <div className="flex h-screen bg-zinc-900 overflow-hidden">
       <CharacterPanel
@@ -56,12 +68,14 @@ export default function Home() {
         onRemove={handleRemove}
         onPoseChange={handlePoseChange}
         onToggleFacing={handleToggleFacing}
+        onToggleRole={handleToggleRole}
       />
       <main className="flex-1 min-w-0 flex items-center justify-center overflow-auto p-4">
         <Stage
           stageName={stageName}
           stagedCharacters={stagedCharacters}
           onMoveCharacter={handleMoveCharacter}
+          onMoveBall={handleMoveBall}
         />
       </main>
     </div>

@@ -22,6 +22,9 @@ export function BallPathLayer({ entries }: Props) {
         const reflections = reflectionPoints(path);
         const anchor = labelAnchor(path);
 
+        const termBox = path.termination?.box;
+        const termColor = path.termination?.kind === "hitbox" ? "#ff4444" : "#4488ff";
+
         return (
           <g key={i}>
             <polyline
@@ -36,6 +39,16 @@ export function BallPathLayer({ entries }: Props) {
             {reflections.map((pt, j) => (
               <circle key={j} cx={pt.x} cy={pt.y} r={5} fill={color} opacity={0.9} />
             ))}
+            {termBox && (
+              <rect
+                x={termBox[0]}
+                y={termBox[1]}
+                width={termBox[2]}
+                height={termBox[3]}
+                fill={termColor}
+                opacity={0.5}
+              />
+            )}
             <text
               x={anchor.x}
               y={anchor.y - 6}
