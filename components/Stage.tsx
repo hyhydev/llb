@@ -12,6 +12,24 @@ import type { BallPathEntry } from "@/components/BallPathLayer";
 import type { StagedCharacter } from "@/lib/stagedCharacters";
 import type { Box } from "@/data/types";
 
+function clampToHitboxUnion(
+  pt: { x: number; y: number },
+  hitboxes: Box[],
+): { x: number; y: number } {
+  for (const [x, y, w, h] of hitboxes) {
+    if (pt.x >= x && pt.x <= x + w && pt.y >= y && pt.y <= y + h) return pt;
+  }
+  let best = pt;
+  let bestDist = Infinity;
+  for (const [x, y, w, h] of hitboxes) {
+    const cx = Math.max(x, Math.min(x + w, pt.x));
+    const cy = Math.max(y, Math.min(y + h, pt.y));
+    const d = Math.hypot(cx - pt.x, cy - pt.y);
+    if (d < bestDist) { bestDist = d; best = { x: cx, y: cy }; }
+  }
+  return best;
+}
+
 interface Props {
   stageName: keyof typeof stageJSON;
   stagedCharacters: StagedCharacter[];
@@ -71,19 +89,13 @@ export function Stage({ stageName, stagedCharacters, onMoveCharacter, onMoveBall
       const character = characterJSON[sc.characterName];
       const poseData = character.poses.find((p) => p.name === sc.pose) ?? character.poses[0];
       const [charW, charH] = poseData.imgSize;
-      // Convert stage coords to sprite-local, constrained to hitbox union bounding box
-      const localX = pt.x - sc.position.x + charW / 2;
+      // Convert stage coords to right-facing sprite-local (hitboxes are stored right-facing)
+      const rawLocalX = pt.x - sc.position.x + charW / 2;
+      const localX = sc.facing === "left" ? charW - rawLocalX : rawLocalX;
       const localY = pt.y - sc.position.y + charH / 2;
       const hitboxes = poseData.hitboxes as Box[];
       if (hitboxes.length > 0) {
-        const minX = Math.min(...hitboxes.map(([x]) => x));
-        const maxX = Math.max(...hitboxes.map(([x, , w]) => x + w));
-        const minY = Math.min(...hitboxes.map(([, y]) => y));
-        const maxY = Math.max(...hitboxes.map(([, y, , h]) => y + h));
-        onMoveBall(sc.id, {
-          x: Math.max(minX, Math.min(maxX, localX)),
-          y: Math.max(minY, Math.min(maxY, localY)),
-        });
+        onMoveBall(sc.id, clampToHitboxUnion({ x: localX, y: localY }, hitboxes));
       }
     }
   }
